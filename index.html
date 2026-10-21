@@ -105,6 +105,9 @@ section.view{padding-top:18px;}
 .steps{margin:0; padding-left:20px; font-size:13px; color:var(--fg-muted); line-height:1.8;}
 .steps li{margin-bottom:4px;}
 .saved-badge{font-size:12px; font-weight:700; color:var(--good);}
+.mic-btn{flex:none; padding:9px 12px; font-size:16px; line-height:1;}
+.mic-btn.listening{background:var(--accent); color:var(--accent-fg); border-color:var(--accent);}
+.mic-btn:disabled{opacity:.4; cursor:not-allowed;}
 [hidden]{display:none !important;}
 </style>
 </head>
@@ -134,7 +137,10 @@ section.view{padding-top:18px;}
         </div>
         <div class="field" id="areaField" hidden>
           <label for="areaInput">エリア（最寄り駅・地名など）</label>
-          <input type="text" id="areaInput" placeholder="例: 池袋駅東口、渋谷、新宿三丁目">
+          <div class="keyrow">
+            <input type="text" id="areaInput" placeholder="例: 池袋駅東口、渋谷、新宿三丁目">
+            <button type="button" class="ghost-btn mic-btn" id="areaMicBtn" aria-label="音声入力">🎤</button>
+          </div>
         </div>
         <div class="field">
           <label for="genreSelect">ジャンル</label>
@@ -155,7 +161,10 @@ section.view{padding-top:18px;}
         </div>
         <div class="field">
           <label for="genreFree">または自由入力（例: 担々麺、台湾料理、麻婆豆腐）</label>
-          <input type="text" id="genreFree" placeholder="入力すると上の選択より優先されます">
+          <div class="keyrow">
+            <input type="text" id="genreFree" placeholder="入力すると上の選択より優先されます">
+            <button type="button" class="ghost-btn mic-btn" id="genreMicBtn" aria-label="音声入力">🎤</button>
+          </div>
         </div>
         <div class="field">
           <label>いつ行く</label>
@@ -287,6 +296,43 @@ section.view{padding-top:18px;}
       gpsBtn.disabled = false;
     }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
   });
+  function setupVoiceInput(inputEl, btnEl){
+    var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR){
+      btnEl.disabled = true;
+      btnEl.title = 'この端末・ブラウザは音声入力に対応していません';
+      return;
+    }
+    var recognition = new SR();
+    recognition.lang = 'ja-JP';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    var listening = false;
+    btnEl.addEventListener('click', function(){
+      if (listening) { recognition.stop(); return; }
+      try { recognition.start(); } catch(e){}
+    });
+    recognition.addEventListener('start', function(){
+      listening = true;
+      btnEl.classList.add('listening');
+      btnEl.textContent = '🔴';
+    });
+    recognition.addEventListener('result', function(e){
+      inputEl.value = e.results[0][0].transcript;
+    });
+    recognition.addEventListener('error', function(e){
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+        btnEl.title = 'マイクの利用が許可されていません。設定を確認してください。';
+      }
+    });
+    recognition.addEventListener('end', function(){
+      listening = false;
+      btnEl.classList.remove('listening');
+      btnEl.textContent = '🎤';
+    });
+  }
+  setupVoiceInput(document.getElementById('areaInput'), document.getElementById('areaMicBtn'));
+  setupVoiceInput(document.getElementById('genreFree'), document.getElementById('genreMicBtn'));
   var moodGroup = document.getElementById('moodGroup');
   var currentMood = 'none';
   moodGroup.addEventListener('click', function(e){
