@@ -546,7 +546,7 @@ section.view{padding-top:18px;}
       var textQuery = queryParts.join(' ');
       return placesFetch('places:searchText', {
         textQuery: textQuery, languageCode: 'ja', regionCode: 'JP', maxResultCount: 20,
-        locationBias: { circle: { center: { latitude: loc.lat, longitude: loc.lng }, radius: opts.radius } }
+        locationRestriction: { circle: { center: { latitude: loc.lat, longitude: loc.lng }, radius: opts.radius } }
       }, 'places.id,places.displayName,places.rating,places.userRatingCount,places.formattedAddress,places.location,places.types,places.priceLevel,places.googleMapsUri,places.reviews,places.regularOpeningHours,places.currentOpeningHours', apiKey)
       .then(function(json){
         var places = json.places || [];
@@ -554,6 +554,11 @@ section.view{padding-top:18px;}
         var candidates = places
           .filter(function(p){ return p.id && !visited[p.id]; })
           .filter(function(p){ return isOpenForVisit(p, opts.arrivalOffset) !== false; })
+          .filter(function(p){
+            if (!p.location) return true;
+            var d = haversineMeters(loc.lat, loc.lng, p.location.latitude, p.location.longitude);
+            return d <= opts.radius;
+          })
           .map(function(p){
             var dist = (p.location) ? haversineMeters(loc.lat, loc.lng, p.location.latitude, p.location.longitude) : null;
             var review = (p.reviews && p.reviews[0] && p.reviews[0].text && p.reviews[0].text.text) || '';
