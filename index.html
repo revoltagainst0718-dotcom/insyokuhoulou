@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>今夜どこ行く</title>
+<title>飲食放浪記</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23C8740E'/%3E%3Ccircle cx='50' cy='50' r='28' fill='none' stroke='white' stroke-width='6'/%3E%3Ccircle cx='50' cy='50' r='6' fill='white'/%3E%3C/svg%3E">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23C8740E'/%3E%3Ccircle cx='50' cy='50' r='28' fill='none' stroke='white' stroke-width='6'/%3E%3Ccircle cx='50' cy='50' r='6' fill='white'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -79,8 +79,9 @@ section.view{padding-top:18px;}
 .msg.info{background:color-mix(in srgb, var(--accent) 14%, var(--surface)); color:var(--fg);}
 .msg.good{background:color-mix(in srgb, var(--good) 16%, var(--surface)); color:var(--good);}
 .result-card{display:flex; flex-direction:column; gap:10px;}
-.result-top{display:flex; justify-content:space-between; gap:10px;}
-.result-name{font-family:var(--font-display); font-size:17px; font-weight:700; min-width:0;}
+.result-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+.rank-badge{flex:none; width:28px; height:28px; border-radius:50%; background:var(--accent); color:var(--accent-fg); font-family:var(--font-display); font-weight:700; font-size:13px; display:flex; align-items:center; justify-content:center;}
+.result-name{font-family:var(--font-display); font-size:17px; font-weight:700; min-width:0; flex:1;}
 .result-dist{font-size:13px; font-weight:700; color:var(--accent); white-space:nowrap;}
 .result-meta{display:flex; align-items:center; gap:6px; font-size:13px; color:var(--fg-muted); flex-wrap:wrap;}
 .stars{color:var(--accent); font-weight:700;}
@@ -93,12 +94,19 @@ section.view{padding-top:18px;}
 .card-actions{display:flex; gap:8px;}
 .card-actions a, .card-actions button{flex:1; text-align:center; padding:10px; border-radius:10px; font-size:13px; font-weight:700; text-decoration:none; cursor:pointer;}
 .link-btn{border:1px solid var(--border); background:var(--surface-2); color:var(--fg);}
-.visit-btn{border:none; background:var(--good); color:#fff;}
-.visit-btn[disabled]{background:var(--surface-2); color:var(--fg-muted);}
+.visit-row{display:flex; gap:6px; flex-wrap:wrap;}
+.star-btn{flex:1; min-width:0; padding:9px 6px; border-radius:10px; border:1px solid var(--border); background:var(--surface-2); color:var(--fg); font-size:13px; font-weight:700; cursor:pointer;}
+.star-btn.favorite{color:var(--accent); border-color:var(--accent);}
+.star-btn.again{color:var(--good); border-color:var(--good);}
+.star-btn.never{color:var(--danger); border-color:var(--danger);}
+.star-btn[disabled]{opacity:.5; cursor:default;}
 .visited-item{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid var(--border);}
 .visited-item:last-child{border-bottom:none;}
 .visited-name{font-weight:700;}
 .visited-date{font-size:12px; color:var(--fg-muted);}
+.visited-rating{font-size:12px; font-weight:700; color:var(--accent);}
+.visited-rating.again{color:var(--good);}
+.visited-rating.never{color:var(--danger);}
 .empty{text-align:center; padding:40px 10px; color:var(--fg-muted); font-size:14px; line-height:1.7;}
 .keyrow{display:flex; gap:8px;}
 .keyrow input{flex:1; min-width:0;}
@@ -114,7 +122,7 @@ section.view{padding-top:18px;}
 <body>
 <div class="page">
   <div class="topbar">
-    <div class="brand"><h1>今夜どこ行く</h1><span>評価 × 口コミ × 距離でおまかせ提案</span></div>
+    <div class="brand"><h1>飲食放浪記</h1><span>評価 × 口コミでランキングTOP5</span></div>
     <div class="tabs" role="tablist">
       <button class="tab-btn" data-tab="search" aria-selected="true">提案</button>
       <button class="tab-btn" data-tab="visited" aria-selected="false">行った店</button>
@@ -173,7 +181,19 @@ section.view{padding-top:18px;}
             <button type="button" class="chip-btn" data-meal="lunch" aria-pressed="false">ランチ</button>
             <button type="button" class="chip-btn" data-meal="dinner" aria-pressed="false">ディナー</button>
           </div>
-          <div class="hint">検索した今の時点で営業していない店・今日が定休日の店は、選択に関わらず常に候補から外します。</div>
+          <div class="hint">ランチ/ディナーを選ぶと検索キーワードに反映されます(営業時間の判定は下の「来店予定」で行います)。</div>
+        </div>
+        <div class="field">
+          <label for="arrivalSelect">来店予定</label>
+          <select id="arrivalSelect">
+            <option value="0" selected>今すぐ</option>
+            <option value="30">30分後</option>
+            <option value="60">1時間後</option>
+            <option value="90">1時間30分後</option>
+            <option value="120">2時間後</option>
+            <option value="180">3時間後</option>
+          </select>
+          <div class="hint">指定した時間にまだ開いていない店でも除外されません。今は閉まっていても、その時間に開く店は表示されます。ただし今日が定休日の店はどの設定でも表示されません。</div>
         </div>
         <div class="field">
           <label>気分</label>
@@ -185,7 +205,7 @@ section.view{padding-top:18px;}
         </div>
         <div class="row">
           <div class="field" style="flex:1;">
-            <label>提案してもらう件数</label>
+            <label>ランキング表示件数</label>
             <div class="stepper">
               <button type="button" id="countMinus" aria-label="減らす">−</button>
               <output id="countValue">5</output>
@@ -203,7 +223,7 @@ section.view{padding-top:18px;}
             </select>
           </div>
         </div>
-        <button class="primary-btn" id="searchBtn">提案してもらう</button>
+        <button class="primary-btn" id="searchBtn">ランキングを見る</button>
         <div id="searchMsg"></div>
       </div>
       <div class="stack" id="resultsArea"></div>
@@ -287,7 +307,7 @@ section.view{padding-top:18px;}
     navigator.geolocation.getCurrentPosition(function(pos){
       gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       var acc = Math.round(pos.coords.accuracy || 0);
-      gpsStatus.textContent = '取得しました（誤差 約' + acc + 'm）。このまま「提案してもらう」を押せます。';
+      gpsStatus.textContent = '取得しました（誤差 約' + acc + 'm）。このまま「ランキングを見る」を押せます。';
       gpsBtn.disabled = false;
     }, function(err){
       gpsCoords = null;
@@ -380,6 +400,7 @@ section.view{padding-top:18px;}
     if (f.genre) document.getElementById('genreSelect').value = f.genre;
     if (f.genreFree) document.getElementById('genreFree').value = f.genreFree;
     if (f.radius) document.getElementById('radiusSelect').value = f.radius;
+    if (f.arrivalOffset != null) document.getElementById('arrivalSelect').value = f.arrivalOffset;
     if (f.count) { count = f.count; countValue.textContent = count; }
     if (f.mood) {
       currentMood = f.mood;
@@ -397,9 +418,9 @@ section.view{padding-top:18px;}
     }
   })();
   function getVisited(){ return safeJson(LS.visited, {}); }
-  function addVisited(id, name){
+  function addVisited(id, name, category){
     var v = getVisited();
-    v[id] = { name: name, at: new Date().toISOString() };
+    v[id] = { name: name, at: new Date().toISOString(), category: category };
     safeSetJson(LS.visited, v);
   }
   function removeVisited(id){
@@ -408,16 +429,21 @@ section.view{padding-top:18px;}
     safeSetJson(LS.visited, v);
     renderVisited();
   }
+  var CATEGORY_LABEL = { favorite: 'お気に入り', again: 'また行く', never: 'もう行かない' };
+  function ratingLabel(category){
+    return '<span class="visited-rating '+escapeHtml(category||'')+'">' + (CATEGORY_LABEL[category] || category || '') + '</span>';
+  }
   function renderVisited(){
     var v = getVisited();
     var ids = Object.keys(v).sort(function(a,b){ return new Date(v[b].at) - new Date(v[a].at); });
     var el = document.getElementById('visitedList');
-    if (!ids.length){ el.innerHTML = '<div class="empty">まだ記録がありません。提案画面で「行った」ボタンを押すとここに追加されます。</div>'; return; }
+    if (!ids.length){ el.innerHTML = '<div class="empty">まだ記録がありません。提案画面で評価ボタンを押すとここに追加されます。</div>'; return; }
     el.innerHTML = ids.map(function(id){
       var item = v[id];
       var d = new Date(item.at);
       var dateStr = d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate();
-      return '<div class="visited-item"><div><div class="visited-name">'+escapeHtml(item.name)+'</div><div class="visited-date">'+dateStr+'</div></div>'+
+      return '<div class="visited-item"><div><div class="visited-name">'+escapeHtml(item.name)+'</div>'+
+             '<div class="visited-date">'+dateStr+' ・ '+ratingLabel(item.category)+'</div></div>'+
              '<button class="ghost-btn" data-remove="'+id+'">取り消す</button></div>';
     }).join('');
     el.querySelectorAll('[data-remove]').forEach(function(btn){
@@ -451,12 +477,38 @@ section.view{padding-top:18px;}
     if (m < 1000) return Math.round(m) + 'm';
     return (m/1000).toFixed(1) + 'km';
   }
-  function isOpenNow(place){
-    var cur = place.currentOpeningHours;
-    if (cur && typeof cur.openNow === 'boolean') return cur.openNow;
-    var reg = place.regularOpeningHours;
-    if (reg && typeof reg.openNow === 'boolean') return reg.openNow;
-    return null;
+  function dayMinutes(d,h,m){ return d*1440 + (h||0)*60 + (m||0); }
+  function isOpenAtPoint(periods, dayOfWeek, minuteOfDay){
+    if (!periods || !periods.length) return null;
+    var targetAbs = dayMinutes(dayOfWeek, 0, 0) + minuteOfDay;
+    for (var i=0;i<periods.length;i++){
+      var p = periods[i];
+      if (!p.open) continue;
+      var openAbs = dayMinutes(p.open.day, p.open.hour, p.open.minute);
+      var closeAbs;
+      if (p.close){
+        closeAbs = dayMinutes(p.close.day, p.close.hour, p.close.minute);
+        if (closeAbs <= openAbs) closeAbs += 7*1440;
+      } else {
+        closeAbs = openAbs + 7*1440;
+      }
+      for (var shift=-7*1440; shift<=7*1440; shift+=7*1440){
+        if (targetAbs >= openAbs+shift && targetAbs < closeAbs+shift) return true;
+      }
+    }
+    return false;
+  }
+  function isOpenForVisit(place, offsetMinutes){
+    if (!offsetMinutes){
+      var cur = place.currentOpeningHours;
+      if (cur && typeof cur.openNow === 'boolean') return cur.openNow;
+      var reg = place.regularOpeningHours;
+      if (reg && typeof reg.openNow === 'boolean') return reg.openNow;
+      return null;
+    }
+    var target = new Date(Date.now() + offsetMinutes*60000);
+    var periods = (place.currentOpeningHours && place.currentOpeningHours.periods) || (place.regularOpeningHours && place.regularOpeningHours.periods);
+    return isOpenAtPoint(periods, target.getDay(), target.getHours()*60 + target.getMinutes());
   }
   function placesFetch(path, body, fieldMask, apiKey){
     return fetch('https://places.googleapis.com/v1/' + path, {
@@ -501,7 +553,7 @@ section.view{padding-top:18px;}
         var visited = getVisited();
         var candidates = places
           .filter(function(p){ return p.id && !visited[p.id]; })
-          .filter(function(p){ return isOpenNow(p) !== false; })
+          .filter(function(p){ return isOpenForVisit(p, opts.arrivalOffset) !== false; })
           .map(function(p){
             var dist = (p.location) ? haversineMeters(loc.lat, loc.lng, p.location.latitude, p.location.longitude) : null;
             var review = (p.reviews && p.reviews[0] && p.reviews[0].text && p.reviews[0].text.text) || '';
@@ -511,7 +563,9 @@ section.view{padding-top:18px;}
               reviewCount: p.userRatingCount || 0, address: p.formattedAddress || '', dist: dist, review: review, type: type,
               price: PRICE_JA[p.priceLevel] || '',
               mapsUri: p.googleMapsUri || ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent((p.displayName && p.displayName.text) || '')),
-              openNow: p.regularOpeningHours ? p.regularOpeningHours.openNow : null
+              openNow: p.regularOpeningHours ? p.regularOpeningHours.openNow : null,
+              arrivalOffset: opts.arrivalOffset,
+              openAtArrival: isOpenForVisit(p, opts.arrivalOffset)
             };
           });
         var thresholds = [4.3, 4.0, 3.7, 3.3, 0];
@@ -521,29 +575,13 @@ section.view{padding-top:18px;}
           if (pool.length >= opts.count || thresholds[i] === 0) break;
         }
         if (!pool.length) pool = candidates;
-        pool.forEach(function(c){ c.weight = Math.max(c.rating, 0.1) * Math.log((c.reviewCount||0) + 2); });
-        var picked = weightedSample(pool, opts.count);
-        picked.sort(function(a,b){ return (a.dist||0) - (b.dist||0); });
+        var C = 10, M = 4.0;
+        pool.forEach(function(c){ c.score = (c.reviewCount/(c.reviewCount+C))*c.rating + (C/(c.reviewCount+C))*M; });
+        pool.sort(function(a,b){ return b.score - a.score; });
+        var picked = pool.slice(0, opts.count);
         return { picked: picked, totalFound: places.length };
       });
     });
-  }
-  function weightedSample(items, k){
-    var pool = items.slice();
-    var picked = [];
-    while (picked.length < k && pool.length){
-      var total = pool.reduce(function(s,p){ return s + p.weight; }, 0);
-      var r = Math.random() * total;
-      var idx = 0;
-      for (; idx < pool.length; idx++){
-        r -= pool[idx].weight;
-        if (r <= 0) break;
-      }
-      idx = Math.min(idx, pool.length - 1);
-      picked.push(pool[idx]);
-      pool.splice(idx, 1);
-    }
-    return picked;
   }
   function renderResults(list){
     var el = document.getElementById('resultsArea');
@@ -551,16 +589,20 @@ section.view{padding-top:18px;}
       el.innerHTML = '<div class="msg info">条件に合うお店が見つかりませんでした。範囲を広げるかジャンルを変えてみてください。</div>';
       return;
     }
-    el.innerHTML = list.map(function(r){
+    el.innerHTML = list.map(function(r, idx){
       var stars = '★ ' + (r.rating ? r.rating.toFixed(1) : '―');
       var tags = [];
       if (r.type) tags.push('<span class="tag">'+escapeHtml(r.type)+'</span>');
       if (r.price) tags.push('<span class="tag">'+escapeHtml(r.price)+'</span>');
-      if (r.openNow === true) tags.push('<span class="tag open">営業中</span>');
-      if (r.openNow === false) tags.push('<span class="tag closed">営業時間外</span>');
+      if (!r.arrivalOffset){
+        if (r.openNow === true) tags.push('<span class="tag open">営業中</span>');
+        if (r.openNow === false) tags.push('<span class="tag closed">営業時間外</span>');
+      } else if (r.openAtArrival === true) {
+        tags.push('<span class="tag open">来店予定時刻に営業</span>');
+      }
       return (
         '<div class="card result-card">' +
-          '<div class="result-top"><div class="result-name">'+escapeHtml(r.name)+'</div>' +
+          '<div class="result-top"><div class="rank-badge">'+(idx+1)+'</div><div class="result-name">'+escapeHtml(r.name)+'</div>' +
           (r.dist!=null ? '<div class="result-dist">'+formatDist(r.dist)+'</div>' : '') + '</div>' +
           '<div class="result-meta"><span class="stars">'+stars+'</span><span>（'+r.reviewCount+'件）</span></div>' +
           '<div class="tagrow">'+tags.join('')+'</div>' +
@@ -568,16 +610,22 @@ section.view{padding-top:18px;}
           (r.address ? '<div class="addr">'+escapeHtml(r.address)+'</div>' : '') +
           '<div class="card-actions">' +
             '<a class="link-btn" href="'+r.mapsUri+'" target="_blank" rel="noopener">Googleマップで見る</a>' +
-            '<button class="visit-btn" data-visit="'+r.id+'" data-name="'+escapeHtml(r.name)+'">行った</button>' +
+          '</div>' +
+          '<div class="visit-row" data-id="'+r.id+'" data-name="'+escapeHtml(r.name)+'">' +
+            '<button class="star-btn favorite" data-cat="favorite">お気に入り</button>' +
+            '<button class="star-btn again" data-cat="again">また行く</button>' +
+            '<button class="star-btn never" data-cat="never">もう行かない</button>' +
           '</div>' +
         '</div>'
       );
     }).join('');
-    el.querySelectorAll('[data-visit]').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        addVisited(btn.dataset.visit, btn.dataset.name);
-        btn.disabled = true;
-        btn.textContent = '記録しました';
+    el.querySelectorAll('.visit-row').forEach(function(row){
+      row.querySelectorAll('.star-btn').forEach(function(btn){
+        btn.addEventListener('click', function(){
+          addVisited(row.dataset.id, row.dataset.name, btn.dataset.cat);
+          row.querySelectorAll('.star-btn').forEach(function(b){ b.disabled = true; });
+          btn.textContent = '記録しました';
+        });
       });
     });
   }
@@ -589,6 +637,7 @@ section.view{padding-top:18px;}
     var genreSelect = document.getElementById('genreSelect').value;
     var genre = genreFree || genreSelect;
     var radius = parseInt(document.getElementById('radiusSelect').value, 10);
+    var arrivalOffset = parseInt(document.getElementById('arrivalSelect').value, 10);
     var apiKey = getApiKey();
     searchMsg.innerHTML = '';
     if (!apiKey){
@@ -603,11 +652,11 @@ section.view{padding-top:18px;}
       searchMsg.innerHTML = '<div class="msg error">エリアを入力してください。</div>';
       return;
     }
-    safeSetJson(LS.lastForm, { area: area, genre: genreSelect, genreFree: genreFree, radius: radius, count: count, mood: currentMood, meal: currentMeal, locMode: locMode });
+    safeSetJson(LS.lastForm, { area: area, genre: genreSelect, genreFree: genreFree, radius: radius, arrivalOffset: arrivalOffset, count: count, mood: currentMood, meal: currentMeal, locMode: locMode });
     searchBtn.disabled = true;
     searchBtn.textContent = '検索中…';
     document.getElementById('resultsArea').innerHTML = '';
-    var opts = { genre: genre, mood: currentMood, meal: currentMeal, radius: radius, count: count };
+    var opts = { genre: genre, mood: currentMood, meal: currentMeal, radius: radius, arrivalOffset: arrivalOffset, count: count };
     if (locMode === 'gps') opts.loc = gpsCoords; else opts.area = area;
     searchRestaurants(opts, apiKey)
       .then(function(res){ renderResults(res.picked); })
@@ -616,7 +665,7 @@ section.view{padding-top:18px;}
       })
       .finally(function(){
         searchBtn.disabled = false;
-        searchBtn.textContent = '提案してもらう';
+        searchBtn.textContent = 'ランキングを見る';
       });
   });
 })();
